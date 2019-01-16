@@ -1,0 +1,115 @@
+{
+  "nodes": [
+    {
+      "name": "s1",
+      "ip": "1.0.0.1",
+      "rules": [
+        {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "00000001000000000000000000000101"
+            }
+          ],
+          "actions": {
+            "nexthop": "s2"
+          }
+        }
+      ]
+    },
+    {
+      "name": "s2",
+      "ip": "1.0.0.2",
+      "rules": [
+        {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "00000001000000000000000000000101"
+            }
+          ],
+          "actions": {
+            "nexthop": "s4"
+          }
+        }, {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "00000001000000000000000000000111"
+            }
+          ],
+          "actions": {
+            "nexthop": "s3"
+          }
+        }
+      ]
+    },
+    {
+      "name": "s3",
+      "ip": "1.0.0.3",
+      "rules": [
+        {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "00000001000000000000000000000101"
+            }
+          ],
+          "actions": {
+            "nexthop": "s1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "s4",
+      "ip": "1.0.0.4",
+      "rules": [
+        {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "00000001000000000000000000000101"
+            }
+          ],
+          "actions": {
+            "nexthop": "s5"
+          }
+        }
+      ]
+    },
+    {
+      "name": "s5",
+      "ip": "1.0.0.5",
+      "rules": [
+        {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "********************************"
+            }
+          ],
+          "actions": {
+            "nexthop": ""
+          }
+        }
+      ]
+    }
+  ],
+  "links": [{
+    "src": "s1",
+    "dst": "s2"
+  }, {
+    "src": "s3",
+    "dst": "s1"
+  }, {
+    "src": "s2",
+    "dst": "s4"
+  }, {
+    "src": "s4",
+    "dst": "s5"
+  }, {
+    "src": "s2",
+    "dst": "s3"
+  }]
+}
