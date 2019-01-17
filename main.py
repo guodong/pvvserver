@@ -4,6 +4,7 @@ import sys
 import netifaces
 import time
 import threading
+import os, signal
 from space import Space
 
 BUF_SIZE = 4096
@@ -62,12 +63,11 @@ class Node:
         threads.append(t1)
         t2 = threading.Thread(target=self.trigger_server)
         threads.append(t2)
-
         for t in threads:
             t.setDaemon(True)
             t.start()
 
-        t.join()
+        # t.join()
 
     # server for trigger update
     def trigger_server(self):
@@ -319,7 +319,7 @@ class Node:
 
         return None
 
-    def init(self):
+    def init(self, sig, frame):
         print 'starttime: %d' % int(time.time() * 1000000)
         headers = [
             self.gen_bits(48),  # dl_dst
@@ -353,8 +353,13 @@ class Node:
 
 
 if __name__ == '__main__':
+    print os.getpid()
+
     node = Node()
+    signal.signal(signal.SIGIO, node.init)
     if len(sys.argv) > 1:
         node.init()
     else:
         node.bootstrap()
+    while True:
+        time.sleep(1)
