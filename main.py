@@ -11,7 +11,7 @@ BUF_SIZE = 4096
 PORT = 9999
 TRIGGER_PORT = 8888
 # TOPO_FILE = 'topo-add-rule.json'
-TOPO_FILE = 'topo.json'
+TOPO_FILE = 'bigtopo.json'
 
 # PM for one protocol
 class PM:
@@ -344,7 +344,7 @@ class Node:
         ]
         msg = {
             'protocol': 'p1',
-            'property': 'reach:5',
+            'property': 'reach:' + self.name,
             # 'action': 'plus',
             'space': [''.join(headers)]
         }

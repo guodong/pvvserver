@@ -1,0 +1,237 @@
+{
+  "nodes": [
+    {
+      "name": "sea1",
+      "ip": "1.0.0.1",
+      "rules": [
+        {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "00000001000000000000000000000110"
+            }
+          ],
+          "actions": {
+            "nexthop": "slc1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "slc1",
+      "ip": "1.0.0.2",
+      "rules": [
+        {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "00000001000000000000000000000110"
+            }
+          ],
+          "actions": {
+            "nexthop": "mci1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mci1",
+      "ip": "1.0.0.3",
+      "rules": [
+        {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "00000001000000000000000000000110"
+            }
+          ],
+          "actions": {
+            "nexthop": "ord1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ord1",
+      "ip": "1.0.0.4",
+      "rules": [
+        {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "00000001000000000000000000000110"
+            }
+          ],
+          "actions": {
+            "nexthop": "cle1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "cle1",
+      "ip": "1.0.0.5",
+      "rules": [
+        {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "00000001000000000000000000000110"
+            }
+          ],
+          "actions": {
+            "nexthop": "ewr1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ewr1",
+      "ip": "1.0.0.6",
+      "rules": [
+        {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "********************************"
+            }
+          ],
+          "actions": {
+            "nexthop": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "iad1",
+      "ip": "1.0.0.7",
+      "rules": [
+        {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "00000001000000000000000000000110"
+            }
+          ],
+          "actions": {
+            "nexthop": "ewr1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "atl1",
+      "ip": "1.0.0.8",
+      "rules": [
+        {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "00000001000000000000000000000110"
+            }
+          ],
+          "actions": {
+            "nexthop": "iad1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iah1",
+      "ip": "1.0.0.9",
+      "rules": [
+        {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "00000001000000000000000000000110"
+            }
+          ],
+          "actions": {
+            "nexthop": "atl1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "lax1",
+      "ip": "1.0.0.10",
+      "rules": [
+        {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "00000001000000000000000000000110"
+            }
+          ],
+          "actions": {
+            "nexthop": "iah1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sfo1",
+      "ip": "1.0.0.11",
+      "rules": [
+        {
+          "matches": [
+            {
+              "field": "nw_dst",
+              "value": "00000001000000000000000000000110"
+            }
+          ],
+          "actions": {
+            "nexthop": "lax"
+          }
+        }
+      ]
+    }
+  ],
+  "links": [{
+    "src": "sea1",
+    "dst": "sfo1"
+  }, {
+    "src": "sfo1",
+    "dst": "lax1"
+  }, {
+    "src": "sea1",
+    "dst": "slc1"
+  }, {
+    "src": "lax1",
+    "dst": "slc1"
+  }, {
+    "src": "lax1",
+    "dst": "iah1"
+  }, {
+    "src": "slc1",
+    "dst": "mci1"
+  }, {
+    "src": "mci1",
+    "dst": "iah1"
+  }, {
+    "src": "mci1",
+    "dst": "ord1"
+  }, {
+    "src": "iah1",
+    "dst": "atl1"
+  }, {
+    "src": "ord1",
+    "dst": "atl1"
+  }, {
+    "src": "ord1",
+    "dst": "cle1"
+  }, {
+    "src": "atl1",
+    "dst": "iad1"
+  }, {
+    "src": "cle1",
+    "dst": "iad1"
+  }, {
+    "src": "cle1",
+    "dst": "ewr1"
+  }, {
+    "src": "iad1",
+    "dst": "ewr1"
+  }]
+}

@@ -1,7 +1,7 @@
 import json
 import os
 
-TOPO_FILE = 'topo-add-rule.json'
+TOPO_FILE = 'bigtopo.json'
 
 if __name__ == '__main__':
     with open(TOPO_FILE, 'r') as f:

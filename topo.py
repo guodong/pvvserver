@@ -6,7 +6,8 @@ from mininet.cli import CLI
 from mininet.log import setLogLevel
 import json
 
-TOPO_FILE = 'topo-add-rule.json'
+# TOPO_FILE = 'topo-add-rule.json'
+TOPO_FILE = 'bigtopo.json'
 
 def network():
     net = Mininet()
