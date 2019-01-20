@@ -30,6 +30,8 @@ class Network:
 
         # configure ovs
         for node in self.topo['nodes']:
+            if node.has_key('type'):  # TODO: add type to all nodes
+                continue
             c = client.containers.get(node['name'])
             c.exec_run('service openvswitch-switch start')
             c.exec_run('ovs-vsctl add-br s')
@@ -41,17 +43,27 @@ class Network:
         # setup ip
         for node in self.topo['nodes']:
             c = client.containers.get(node['name'])
-            for internal_port, ip in node['internal_ports'].items():
-                c.exec_run('ifconfig ' + internal_port + ' ' + ip)
+            if not node.has_key('type'):
+                for internal_port, ip in node['internal_ports'].items():
+                    c.exec_run('ifconfig ' + internal_port + ' ' + ip)
+            else:
+                for port, ip in node['ports'].items():
+                    c.exec_run('ifconfig ' + port + ' ' + ip)
+                    c.exec_run('route add default gw ' + node['gw'])
+                    c.exec_run('ifconfig ' + port + ' hw ether ' + node['hw'])
 
         # bring up external ports
         for node in self.topo['nodes']:
+            if node.has_key('type'):
+                continue
             c = client.containers.get(node['name'])
             for port in node['ports']:
                 c.exec_run('ifconfig ' + port + ' 0.0.0.0')
 
         # configure quagga
         for node in self.topo['nodes']:
+            if node.has_key('type'):
+                continue
             c = client.containers.get(node['name'])
             cmd = 'bash -c "echo $\''
             for internal_port in node['internal_ports']:
@@ -73,35 +85,67 @@ class Network:
 
         # set rules for ospf
         for node in self.topo['nodes']:
+            if node.has_key('type'):
+                continue
             c = client.containers.get(node['name'])
             c.exec_run('ovs-ofctl del-flows s')  # clear flows before setting
             i = 1
             for internal_port, ip in node['internal_ports'].items():
-                cmd = 'ovs-ofctl add-flow s ip,ip_proto=89,in_port=' + str(i) + ',actions=output:' + str(i+1)
-                c.exec_run(cmd)
-                cmd = 'ovs-ofctl add-flow s arp,arp_tpa=' + ip[:-3] + ',actions=output:' + str((int(internal_port[1:]) - 4) * 2)  # dict iterator is not ordered!!!
-                c.exec_run(cmd)
-                # cmd = 'ovs-ofctl add-flow s ip,nw_dst=' + ip[:-3] + ',actions=output:' + str(i+1)
-                # c.exec_run(cmd)
                 cmd = 'ovs-ofctl add-flow s in_port=' + str(i+1) + ',actions=output:' + str(i)
                 c.exec_run(cmd)
+                cmd = 'ovs-ofctl add-flow s ip,ip_proto=89,in_port=' + str(i) + ',actions=output:' + str(i+1)
+                c.exec_run(cmd)
+                if node['name'] == 'sea1' or node['name'] == 'ewr1':
+                    idx = int(internal_port[1:])
+                    if idx == 1:
+                        cmd = 'ovs-ofctl add-flow s arp,arp_tpa=' + ip[:-3] + ',actions=output:2'  # dict iterator is not ordered!!!
+                        c.exec_run(cmd)
+                        cmd = 'ovs-ofctl add-flow s ip,nw_dst=' + ip[:-3] + ',actions=output:2'
+                        c.exec_run(cmd)
+                    else:
+                        cmd = 'ovs-ofctl add-flow s arp,arp_tpa=' + ip[:-3] + ',actions=output:' + str(
+                            (int(internal_port[1:]) - 3) * 2)  # dict iterator is not ordered!!!
+                        c.exec_run(cmd)
+                        cmd = 'ovs-ofctl add-flow s ip,nw_dst=' + ip[:-3] + ',actions=output:' + str(
+                            (int(internal_port[1:]) - 3) * 2)
+                        c.exec_run(cmd)
+                else:
+                    cmd = 'ovs-ofctl add-flow s arp,arp_tpa=' + ip[:-3] + ',actions=output:' + str(
+                        (int(internal_port[1:]) - 4) * 2)  # dict iterator is not ordered!!!
+                    c.exec_run(cmd)
+                    cmd = 'ovs-ofctl add-flow s ip,nw_dst=' + ip[:-3] + ',actions=output:' + str(
+                        (int(internal_port[1:]) - 4) * 2)
+                    c.exec_run(cmd)
                 i = i + 2
 
         # start quagga
-        print 'starting quagga'
         for node in self.topo['nodes']:
+            if node.has_key('type'):
+                continue
             c = client.containers.get(node['name'])
             c.exec_run('zebra -d -f /etc/quagga/zebra.conf --fpm_format protobuf')
             c.exec_run('ospfd -d -f /etc/quagga/ospfd.conf')
 
-
-
-    def get_node_by_name(self, name):
+        # copy fpmserver into container
         for node in self.topo['nodes']:
-            if node['name'] == name:
-                return node
+            if node.has_key('type'):
+                continue
+            c = client.containers.get(node['name'])
+            os.system('docker cp fpmserver ' + node['name'] + ':/')
+            c.exec_run('/fpmserver/main.py', detach=True)
 
-        return None
+        # add flow to resubmit to ospf tables
+        for node in self.topo['nodes']:
+            if node.has_key('type'):
+                continue
+            c = client.containers.get(node['name'])
+            c.exec_run('ovs-ofctl add-flow s priority=1,actions=resubmit\(,100\)')
+
+
+        print 'finished'
+
+    def get_ofport_by_name(self, name):
+        return
 
 
 def signal_handler(sig, frame):
