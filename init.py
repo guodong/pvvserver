@@ -8,18 +8,13 @@ if __name__ == '__main__':
         data = f.read()
         topo = json.loads(data)
         for node in topo['nodes']:
-            '''
-            cmd = 'ovs-ofctl add-flow ' + node['name'] + ' priority=2,arp,arp_tpa=' + node['ip'] + ',actions=output:1'
-            os.system(cmd)
-            cmd = 'ovs-ofctl add-flow ' + node['name'] + ' priority=2,ip,nw_dst=' + node['ip'] + ',actions=output:1'
-            os.system(cmd)
-
-            cmd = 'ovs-ofctl add-flow ' + node['name'] + ' priority=1,arp,actions=flood'
-            os.system(cmd)
-            cmd = 'ovs-ofctl add-flow ' + node['name'] + ' priority=1,ip,actions=flood'
-            os.system(cmd)
-            '''
-            cmd = 'ovs-ofctl add-flow ' + node['name'] + ' priority=2,in_port=1,actions=flood'
-            os.system(cmd)
-            cmd = 'ovs-ofctl add-flow ' + node['name'] + ' priority=1,udp,tp_dst=9999,actions=output:1'
-            os.system(cmd)
+            if node.has_key('type'):
+                cmd = 'ovs-ofctl add-flow ' + node['name'] + ' priority=44444,in_port=3,udp,tp_src=9999,actions=flood'
+                os.system(cmd)
+                cmd = 'ovs-ofctl add-flow ' + node['name'] + ' priority=44444,udp,tp_dst=9999,actions=output:3'
+                os.system(cmd)
+            else:
+                cmd = 'ovs-ofctl add-flow ' + node['name'] + ' priority=44444,in_port=1,udp,tp_src=9999,actions=flood'
+                os.system(cmd)
+                cmd = 'ovs-ofctl add-flow ' + node['name'] + ' priority=44444,udp,tp_dst=9999,actions=output:1'
+                os.system(cmd)

@@ -17,7 +17,10 @@ class Network:
     def start(self):
         for node in self.topo['nodes']:
             print node['name']
-            container = client.containers.run('snlab/dovs-quagga', detach=True, name=node['name'], privileged=True, tty=True)
+            if node.has_key('type'):  # TODO: add type to all nodes
+                container = client.containers.run('snlab/dovs-quagga', detach=True, name=node['name'], privileged=True, tty=True, network_mode='none')
+            else:
+                container = client.containers.run('snlab/dovs-quagga', detach=True, name=node['name'], privileged=True, tty=True)
             containers[node['name']] = container
 
         for link in self.topo['links']:
@@ -30,11 +33,14 @@ class Network:
 
         # configure ovs
         for node in self.topo['nodes']:
+            print 'configure ovs for ' + node['name']
             if node.has_key('type'):  # TODO: add type to all nodes
                 continue
             c = client.containers.get(node['name'])
             c.exec_run('service openvswitch-switch start')
             c.exec_run('ovs-vsctl add-br s')
+            c.exec_run('ovs-vsctl set-controller s tcp:127.0.0.1:6633')
+            c.exec_run('ovs-vsctl set-fail-mode s secure')
             for port in node['ports']:
                 internal_name = 'i' + port[1:]
                 c.exec_run('ovs-vsctl add-port s ' + port)
@@ -42,6 +48,7 @@ class Network:
 
         # setup ip
         for node in self.topo['nodes']:
+            print 'setup ip for ' + node['name']
             c = client.containers.get(node['name'])
             if not node.has_key('type'):
                 for internal_port, ip in node['internal_ports'].items():
@@ -62,6 +69,7 @@ class Network:
 
         # configure quagga
         for node in self.topo['nodes']:
+            print 'configure quagga for ' + node['name']
             if node.has_key('type'):
                 continue
             c = client.containers.get(node['name'])
@@ -85,14 +93,17 @@ class Network:
 
         # set rules for ospf
         for node in self.topo['nodes']:
+            print 'set rules for ospf for ' + node['name']
             if node.has_key('type'):
                 continue
             c = client.containers.get(node['name'])
             c.exec_run('ovs-ofctl del-flows s')  # clear flows before setting
             i = 1
             for internal_port, ip in node['internal_ports'].items():
+                # if not internal_port == 'i1':
                 cmd = 'ovs-ofctl add-flow s in_port=' + str(i+1) + ',actions=output:' + str(i)
                 c.exec_run(cmd)
+
                 cmd = 'ovs-ofctl add-flow s ip,ip_proto=89,in_port=' + str(i) + ',actions=output:' + str(i+1)
                 c.exec_run(cmd)
                 if node['name'] == 'sea1' or node['name'] == 'ewr1':
@@ -118,29 +129,33 @@ class Network:
                     c.exec_run(cmd)
                 i = i + 2
 
-        # start quagga
-        for node in self.topo['nodes']:
-            if node.has_key('type'):
-                continue
-            c = client.containers.get(node['name'])
-            c.exec_run('zebra -d -f /etc/quagga/zebra.conf --fpm_format protobuf')
-            c.exec_run('ospfd -d -f /etc/quagga/ospfd.conf')
-
         # copy fpmserver into container
         for node in self.topo['nodes']:
+            print 'copy multijet for ' + node['name']
             if node.has_key('type'):
                 continue
             c = client.containers.get(node['name'])
-            os.system('docker cp fpmserver ' + node['name'] + ':/')
-            c.exec_run('/fpmserver/main.py', detach=True)
+            # os.system('docker cp fpmserver ' + node['name'] + ':/')
+            # c.exec_run('/fpmserver/main.py', detach=True)
+            os.system('docker cp /home/gd/PycharmProjects/multijet ' + node['name'] + ':/')
+            c.exec_run('ryu-manager /multijet/multijet.py', detach=True)
 
         # add flow to resubmit to ospf tables
         for node in self.topo['nodes']:
+            print 'add flow to resubmit to ospf tables for ' + node['name']
             if node.has_key('type'):
                 continue
             c = client.containers.get(node['name'])
             c.exec_run('ovs-ofctl add-flow s priority=1,actions=resubmit\(,100\)')
 
+        # start quagga
+        for node in self.topo['nodes']:
+            print 'start quagga for ' + node['name']
+            if node.has_key('type'):
+                continue
+            c = client.containers.get(node['name'])
+            c.exec_run('zebra -d -f /etc/quagga/zebra.conf --fpm_format protobuf')
+            c.exec_run('ospfd -d -f /etc/quagga/ospfd.conf')
 
         print 'finished'
 

@@ -7,6 +7,7 @@ import netifaces
 from python_arptable import ARPTABLE
 import fpm_pb2 as fpm
 import time
+# from pvvcore.pvvnode import Pvvnode
 
 ifaces = netifaces.interfaces()
 ifaces.remove('eth0') # eth0 must be last
