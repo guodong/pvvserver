@@ -18,9 +18,9 @@ class Network:
         for node in self.topo['nodes']:
             print node['name']
             if node.has_key('type'):  # TODO: add type to all nodes
-                container = client.containers.run('snlab/dovs-quagga', detach=True, name=node['name'], privileged=True, tty=True, network_mode='none')
+                container = client.containers.run('snlab/dovs-quagga', detach=True, name=node['name'], privileged=True, tty=True, hostname=node['name'], network_mode='none')
             else:
-                container = client.containers.run('snlab/dovs-quagga', detach=True, name=node['name'], privileged=True, tty=True)
+                container = client.containers.run('snlab/dovs-quagga', detach=True, name=node['name'], privileged=True, tty=True, hostname=node['name'])
             containers[node['name']] = container
 
         for link in self.topo['links']:
