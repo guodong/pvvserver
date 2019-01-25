@@ -137,7 +137,7 @@ class Network:
             c = client.containers.get(node['name'])
             # os.system('docker cp fpmserver ' + node['name'] + ':/')
             # c.exec_run('/fpmserver/main.py', detach=True)
-            os.system('docker cp /home/gd/PycharmProjects/multijet ' + node['name'] + ':/')
+            os.system('docker cp multijet ' + node['name'] + ':/')
             c.exec_run('ryu-manager /multijet/multijet.py', detach=True)
 
         # add flow to resubmit to ospf tables
